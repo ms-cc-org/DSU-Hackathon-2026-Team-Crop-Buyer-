@@ -4,6 +4,45 @@
 
 Droughts, heat waves and unusual weather make farming harder to plan. Many people make decisions about this every season: crop insurers, extension agents, state drought programs, grain buyers. Your team picks one of them, uses 26 years of real county farm data to help them make one decision, and builds a tool that shows it.
 
+## Project brief: ROOTED
+
+We built ROOTED, a Streamlit app that helps livestock producers who buy grain compare three choices: stay with their usual buying area, add a backup county, or switch to another area. Using county crop records from 2000–2025 across Iowa, Nebraska, Delaware, and California, users can select a crop and their usual buying counties, view historical grain production, and explore potential backups. We calculated production by multiplying yield per acre by harvested acres, and we displayed missing records rather than treating them as zero production.
+
+To find potential backups, we calculated each county's average yearly production from 2000–2018. We counted a year as low production when the county produced 90% or less of that average. We then looked for other counties that had fewer low-production years when the buyer's usual area struggled. Only counties with usable production records for every year from 2000–2025 were included in the backup comparison.
+
+We tested the three plans using separate records from 2019–2025. For each county, we compared how much grain it produced each year with its average yearly production from 2000–2018. We compared the usual area alone, a mix of 75% usual-area and 25% backup-area production patterns, and the backup area alone. We counted how many years each plan's result was 90% or less and showed which had the fewest low-production years, including ties. ROOTED provides historical evidence to help buyers explore their options, but it does not confirm grain availability or guarantee future supply.
+
+### The four pitch questions
+
+| Question | ROOTED's answer |
+|---|---|
+| **Who is the user?** | A livestock producer or grain buyer sourcing feed grain. |
+| **What do they decide?** | Whether to rely on their usual buying counties, add a backup county, or switch to a candidate area when their usual area has historically had low production. |
+| **What evidence did you use?** | USDA NASS county crop yields and harvested acres in the bundled master dataset. For records with reported yield and valid harvested acres, production is calculated as yield per acre × harvested acres. The app covers corn, soybeans, winter wheat, and grain sorghum across California, Iowa, Nebraska, and Delaware, 2000–2025, subject to available records. |
+| **How do you know it works?** | The app ranks candidate counties using 2000–2018 records, then compares the usual area, a 75% usual-area/25% backup mix, and the backup area alone on 2019–2025 records. It displays how many held-out years each option meets the project's low-production rule. This is a historical comparison, not proof of future performance or a live supply forecast. |
+How does a User make that decision? They use the chart to compare.
+
+### Scope and limitations
+
+- The held-out comparison covers seven years (2019–2025) and one project-defined threshold. It is a retrospective comparison, not a forecast guarantee.
+- The current prototype does not calculate a prediction interval or show that its estimate beats a trend-only forecast. It therefore does not yet meet every stretch expectation for the hackathon's Grain Supply Outlook direction; do not describe it as a validated supply forecast.
+- Production patterns can be affected by irrigation, crop choice, and local conditions that are not fully represented in the master dataset. See the [data dictionary](data/data_dictionary.md) for coverage and field limitations.
+- The app's result depends on the user's crop and county selections; there is no single hard-coded winning county or plan.
+
+### Alignment with the hackathon judging questions
+
+| Criterion | ROOTED evidence / response |
+|---|---|
+| **Problem definition and relevance (20%)** | Names a grain buyer / livestock producer and a concrete sourcing-area decision. |
+| **Technical implementation (10%)** | Interactive Streamlit app using pandas and Plotly, with filters, production calculations, charts, record inspection, backup ranking, and plan comparison. |
+| **Use of data and evidence (20%)** | Uses reported NASS yields and harvested acres, preserves missing records as unavailable, uses 2000–2018 to rank options, and checks options on 2019–2025. |
+| **Usability and working prototype (15%)** | A user can select a crop and counties, inspect historical production and missingness, and compare backup plans in one page. Run instructions are in [Get set up](#get-set-up). |
+| **Innovation (10%)** | Frames historical county production resilience as a practical backup-sourcing aid for livestock grain buyers. |
+| **Demonstration and presentation (15%)** | Use the four pitch answers above: user, decision, evidence, and held-out comparison. Show one selection from input through recommendation and explain the limitations. |
+| **Collaboration and teamwork (10%)** | Team member names, GitHub usernames, and individual contributions must be supplied by the team; they are not inferred from the code. |
+
+The official judging criteria and weights are from the [student briefing](docs/briefing/Student-briefing.md). The final submission form separately requires the team name, members and GitHub usernames, repository URL, and full 40-character commit SHA. Those team-specific fields are intentionally not guessed here.
+
 ---
 
 ## What you'll do
@@ -288,15 +327,16 @@ docs/
 
 ## Data sources
 
-| Source | What it provides | Access |
-|---|---|---|
-| [USDA NASS Quick Stats](https://quickstats.nass.usda.gov/api) | Crop yield and acreage, irrigated split | API key (free) |
-| [NOAA ACIS GridData](https://docs.rcc-acis.org/acisws/) | Daily precipitation, temperature | No key |
-| [U.S. Drought Monitor](https://droughtmonitor.unl.edu/) | Weekly drought severity (D0–D4) | No key |
-| [USDA NRCS Soil Data Access](https://sdmdataaccess.nrcs.usda.gov/) | Soil water capacity, productivity | No key |
-| [NASA MODIS MOD13Q1 v061](https://lpdaac.usgs.gov/products/mod13q1v061/) | Satellite vegetation indices (NDVI, EVI) | GEE (free) |
+The project uses these data sources:
 
-All sources are public federal data. The master dataset and all processed files are included in the repo — no API calls needed to start working.
+- **USDA NASS Quick Stats** — crop yields, planted and harvested acreage, and irrigated/non-irrigated data. [Source](https://quickstats.nass.usda.gov/api)
+- **NOAA ACIS GridData** — daily precipitation and temperature. [Source](https://docs.rcc-acis.org/acisws/)
+- **U.S. Drought Monitor** — weekly drought severity. [Source](https://droughtmonitor.unl.edu/)
+- **USDA NRCS Soil Data Access (SSURGO)** — soil water capacity and productivity. [Source](https://sdmdataaccess.nrcs.usda.gov/)
+- **NASA MODIS MOD13Q1 v061** — satellite vegetation indices (NDVI and EVI). [Source](https://lpdaac.usgs.gov/products/modis/mod13q1v061/)
+- **U.S. Census Bureau county boundaries**, via the Plotly datasets GeoJSON. [Source](https://github.com/plotly/datasets)
+
+The project includes the master dataset and processed files, so no API calls are needed to start working. NASS API access requires a free key to rerun its data pull; the setup instructions below explain how to configure it.
 
 ### Credits
 
@@ -310,6 +350,20 @@ If you publish or present results from this data, credit the sources:
 - **County boundaries** (`data/counties.geojson`): U.S. Census Bureau county boundaries, from the [plotly/datasets](https://github.com/plotly/datasets) county GeoJSON.
 
 The code and documentation in this repo are under the [MIT License](LICENSE).
+
+## Problem statement and design reference
+
+- **Problem context:** The project addresses weather and climate information for agriculture. See the [National Weather Service mission](https://www.weather.gov/nws/about) and [NWS website](https://www.weather.gov/) for the agency's official mission and public weather information.
+- **Visual design reference:** [iNaturalist](https://www.inaturalist.org/) is a reference for the nature-focused, observation-centered visual direction. It is a design inspiration only; this project is independent and is not affiliated with iNaturalist.
+- **Background video:** [Chickens grazing in a sunlit field](https://www.pexels.com/video/chickens-grazing-in-a-sunlit-field-32864188/) by James Cheney, via Pexels.
+
+## AI tools used
+
+- [Perplexity](https://www.perplexity.ai/) — used as a research assistant to find and review background information and data-source references.
+- [ChatGPT](https://chatgpt.com/) — used for coding assistance, debugging, integrating app changes, and documentation editing.
+- [Google Gemini](https://gemini.google.com/) — used for visual design exploration.
+
+AI-assisted code and descriptions were reviewed against the project files, app logic, and dataset documentation. The Python source was syntax-checked. The app's numerical recommendations come from the bundled data and the documented calculations, not from an AI-generated answer. Team members should run the app and inspect their chosen scenario before presenting; AI tools do not verify that a recommendation reflects current local inventory or prices.
 
 ## Rebuilding the data (organizers only)
 
